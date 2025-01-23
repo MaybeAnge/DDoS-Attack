@@ -22,5 +22,5 @@ This program simulates a **DDoS (Distributed Denial of Service)** attack using U
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/Maybe_Ange/ddos-attack.git
+git clone https://github.com/MaybeAnge/ddos-attack.git
 cd ddos-attack
